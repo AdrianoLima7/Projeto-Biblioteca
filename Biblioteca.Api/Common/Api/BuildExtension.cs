@@ -1,7 +1,9 @@
 ﻿using Biblioteca.Api.Data;
 using Biblioteca.Api.Handlers;
 using Biblioteca.Core.Handlers;
+using Biblioteca.Core.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 namespace Biblioteca.Api.Common.Api;
 
@@ -31,5 +33,6 @@ public static class BuildExtension
         builder.Services.AddTransient<ILivroHandler, LivroHandler>();
         builder.Services.AddTransient<IUsuarioHandler, UsuarioHandler>();
         builder.Services.AddTransient<IEmprestimoHandler, EmprestimoHandler>();
+        builder.Services.AddTransient<IEmailService, EmailService>();
     }
 }

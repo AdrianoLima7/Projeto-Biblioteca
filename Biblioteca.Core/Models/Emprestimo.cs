@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Biblioteca.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,9 @@ public class Emprestimo
     public Livro? Livro { get; set; }
 
     public DateTime? DataEmprestimo { get; set; }
+    public DateTime? DataDevolucaoPrevista { get; set; }
     public DateTime? DataDevolucao { get; set; }
+
+    public EStatusType Status { get; set; } = EStatusType.Ativo;
 
 }

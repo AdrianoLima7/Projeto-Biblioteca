@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Biblioteca.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -23,5 +24,11 @@ public class UpdateEmprestimoRequest : Request
 
     [Required(ErrorMessage = "A data de devolução prevista é obrigatória.")]
     [DataType(DataType.DateTime, ErrorMessage = "A data de devolução prevista deve estar em um formato válido.")]
+    public DateTime? DataDevolucaoPrevista { get; set; }
+
+    [DataType(DataType.DateTime, ErrorMessage = "A data de devolução prevista deve estar em um formato válido.")]
     public DateTime? DataDevolucao { get; set; }
+
+    [Required(ErrorMessage = "Status inválido")]
+    public EStatusType Status { get; set; } = EStatusType.Ativo;
 }

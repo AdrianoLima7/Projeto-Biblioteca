@@ -4,12 +4,14 @@ using Biblioteca.Core.Handlers;
 using Biblioteca.Core.Models;
 using Biblioteca.Core.Requests.Emprestimos;
 using Biblioteca.Core.Responses;
+using Biblioteca.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using System.Net.Mail;
 
 namespace Biblioteca.Api.Handlers;
 
-public class EmprestimoHandler(AppDbContext context) : IEmprestimoHandler
+public class EmprestimoHandler(AppDbContext context, IEmailService _emailService) : IEmprestimoHandler
 {
     public async Task<Response<Emprestimo?>> CreateAsync(CreateEmprestimoRequest request)
     {
@@ -43,7 +45,8 @@ public class EmprestimoHandler(AppDbContext context) : IEmprestimoHandler
                 UsuarioId = request.UsuarioId,
                 LivroId = request.LivroId,
                 DataEmprestimo = request.DataEmprestimo,
-                DataDevolucao = request.DataDevolucao
+                DataDevolucao = null,
+                Status = request.Status,           
             };
 
             if(emprestimo is null)
@@ -58,6 +61,27 @@ public class EmprestimoHandler(AppDbContext context) : IEmprestimoHandler
             context.Usuarios.Update(usuario);
             context.Livros.Update(livro);
             await context.SaveChangesAsync();
+
+            if (!string.IsNullOrEmpty(usuario.Email))
+            {
+                try
+                {
+                    string assunto = "Confirmação de Empréstimo";
+                    string corpo = $"Olá {usuario.Nome}, \n\n" +
+                                   $"Seu empréstimo do livro '{livro.Titulo}' foi realizado com sucesso.\n" +
+                                   $"Data de Empréstimo: {emprestimo.DataEmprestimo}\n" +
+                                   $"Data de Devolução: {emprestimo.DataDevolucao}\n\n" +
+                                   "Obrigado por utilizar nosso serviço!";
+
+                    await _emailService.SendEmailAsync(usuario.Email, assunto, corpo);
+                }
+                catch (SmtpFailedRecipientException ex)
+                {
+                }
+                catch (Exception ex)
+                {
+                }
+            }
 
             return new Response<Emprestimo?>(emprestimo, 201, "Emprestimo criado com sucesso!");
         }
@@ -155,6 +179,11 @@ public class EmprestimoHandler(AppDbContext context) : IEmprestimoHandler
                 return new Response<Emprestimo?>(null, 404, "Empréstimo não encontrado.");
             }
 
+            if (emprestimo.DataDevolucao.HasValue)
+            {
+                return new Response<Emprestimo?>(null, 400, "Este livro já foi devolvido.");
+            }
+
             var usuario = await context.Usuarios.FindAsync(emprestimo.UsuarioId);
             var livro = await context.Livros.FindAsync(emprestimo.LivroId);
 
@@ -162,6 +191,12 @@ public class EmprestimoHandler(AppDbContext context) : IEmprestimoHandler
             {
                 return new Response<Emprestimo?>(null, 404, "Usuário ou livro não encontrado.");
             }
+
+            if (usuario.LivrosPegos < 0)
+            {
+                return new Response<Emprestimo?>(null, 400, "Usuário já atingiu o limite mínimo de livros.");
+            }
+
 
             usuario.LivrosPegos--;
             livro.Copias++;

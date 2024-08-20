@@ -23,6 +23,9 @@ public class EmprestimoMapping : IEntityTypeConfiguration<Emprestimo>
         builder.Property(x => x.DataEmprestimo)
             .IsRequired(false);
 
+        builder.Property(x => x.DataDevolucaoPrevista)
+            .IsRequired(false);
+
         builder.Property(x => x.DataDevolucao)
             .IsRequired(false);
     }
